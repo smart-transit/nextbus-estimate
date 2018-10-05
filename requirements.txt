@@ -1,3 +1,5 @@
 googlemaps
+pandas
+marshmallow
 nose
 responses==0.3
