@@ -2,7 +2,14 @@ import pprint
 import googlemaps
 from datetime import datetime
 
- gmaps = googlemaps.Client(key='<your_key>')
+
+MY_SECRETS_CSV_FILE = '..\..\jtang-python-secrets.csv'
+
+secrets = _secrets.AppSecrets(MY_SECRETS_CSV_FILE)
+
+maps = googlemaps.Client(
+        client_id= secrets.get_google_api_client_id,
+        client_secret= secrets.get_google_api_secret)
 
 # Geocoding an address
 #geocode_result_from = gmaps.geocode('10153 King George Hwy, Surrey, BC')
