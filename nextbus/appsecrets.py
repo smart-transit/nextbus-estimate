@@ -11,6 +11,8 @@ class AppSecrets(object):
         self.__load_secrets()
 
     def __load_secrets(self):
+
+        # reference ..\jtang-python-secrets.csv for possible name/value pairs
         secrets = pd.read_csv(self._secret_file, usecols=['name', 'value', 'encrypted'])
         # load all secrets
         self.__rtti_api_key = (secrets.loc[secrets['name'] == 'translink_api_key', 'value'].iloc[0])
