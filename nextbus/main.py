@@ -1,41 +1,86 @@
 
+import os
 import pandas 
-import _secrets
 import googlemaps
+from datetime import datetime
+from .appsecrets import AppSecrets
 from pprint import pprint
 from translink import rttiapi
 
-MY_SECRETS_CSV_FILE = '..\jtang-python-secrets.csv'
+import json
+class DistanceMatrixResponse(object):
+    def __init__(self, data):
+	    self.__dict__ = json.loads(data)
+        
 
-secrets = _secrets.AppSecrets(MY_SECRETS_CSV_FILE)
+    def get_duration_in_traffic(self):
+        return self.__dict__['rows'][0]['elements'][0]['duration_in_traffic']['text']
 
-api = rttiapi.RTTI(secrets.get_rtti_api_key())
-maps = googlemaps.Client(
-        client_id= secrets.get_google_api_client_id,
-        client_secret= secrets.get_google_api_secret)
+    def get_distance(self):
+        return self.__dict__['rows'][0]['elements'][0]['distance']['text']
+
+    def get_origin_location(self):
+        return self.origin_addresses[0]
 
 
+def main():
 
-stop = api.stop('53095')
-#pprint(stop)
+    #MY_SECRETS_CSV_FILE = '..\jtang-python-secrets.csv'
+    secrets = AppSecrets(os.path.dirname(os.path.abspath(__file__)) + r'\..\..\jtang-python-secrets.csv')
 
-print ('Stop')
-print ('\tNo = ' + str(stop.StopNo))
-print ('\tName =' + stop.Name)
-print ('\tRoute(s) =' + stop.Routes)
-print ('\tgeo.location = ' + str(stop.Latitude) + ',' + str(stop.Longitude))
-print ('\tWheelchairAccess = ' + str(stop.WheelchairAccess))
+    api = rttiapi.RTTI(secrets.get_rtti_api_key())
+    gmaps = googlemaps.Client(
+            client_id= secrets.get_google_api_client_id(),
+            client_secret= secrets.get_google_api_secret())
+    qry_origins = []
+    qry_dests = []
 
-buses = api.buses('53095')
-#print (buses)
-for bus in buses:
-    print ('Bus')
-    print ('\tVehicle# = ' + bus.VehicleNo)
-    print ('\tTripId = ' + str(bus.TripId)) 
-    print ('\tRouteNo = ' + bus.RouteNo)
-    print ('\tgeo.location = ' + str(bus.Latitude) + ',' + str(bus.Longitude))
-    print ('\tDirection = ' + bus.Direction)
-    print ('\tDestination = ' + bus.Destination)
-    print ('\tLastUpdate = ' + str(bus.RecordedTime))
-#print(stop.Name)
+    stop = api.stop('53095')
+    #pprint(stop)
 
+    print ('Stop')
+    print ('\tNo = ' + str(stop.StopNo))
+    print ('\tName =' + stop.Name)
+    print ('\tRoute(s) =' + stop.Routes)
+    print ('\tgeo.location = ' + str(stop.Latitude) + ',' + str(stop.Longitude))
+    print ('\tWheelchairAccess = ' + str(stop.WheelchairAccess))
+
+    qry_dests.append({'lat': stop.Latitude, 'lng': stop.Longitude})
+
+    buses = api.buses('53095')
+    #print (buses)
+    for bus in buses:
+
+        qry_origins.append({'lat': bus.Latitude, 'lng': bus.Longitude})
+        print ('Bus')
+        print ('\tVehicle# = ' + bus.VehicleNo)
+        print ('\tTripId = ' + str(bus.TripId)) 
+        print ('\tRouteNo = ' + bus.RouteNo)
+        print ('\tgeo.location = ' + str(bus.Latitude) + ',' + str(bus.Longitude))
+        print ('\tDirection = ' + bus.Direction)
+        print ('\tDestination = ' + bus.Destination)
+        print ('\tLastUpdate = ' + str(bus.RecordedTime))
+
+        #print (qry_origins)
+        #print (qry_dests)
+        now = datetime.now()
+        # travel info between 2 geo locations
+        distance_result = gmaps.distance_matrix(origins = qry_origins, 
+                destinations = qry_dests,
+                mode = 'driving',
+                departure_time=now)
+
+        
+
+        obj = DistanceMatrixResponse(json.dumps(distance_result))
+
+        print ('\tArrives at =' + obj.get_duration_in_traffic())
+        print ('\tAway = ' + obj.get_distance())
+
+        #pprint (distance_result)
+        print ('\tBus Location = ' + obj.get_origin_location())
+        qry_origins.clear()
+
+    
+if __name__ == '__main__':
+    main()

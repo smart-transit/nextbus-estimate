@@ -1,15 +1,17 @@
-import pprint
+from pprint import pprint
 import googlemaps
 from datetime import datetime
+import nextbus
+from nextbus import appsecrets
 
 
-MY_SECRETS_CSV_FILE = '..\..\jtang-python-secrets.csv'
+MY_SECRETS_CSV_FILE = r'..\jtang-python-secrets.csv'
 
-secrets = _secrets.AppSecrets(MY_SECRETS_CSV_FILE)
-
-maps = googlemaps.Client(
-        client_id= secrets.get_google_api_client_id,
-        client_secret= secrets.get_google_api_secret)
+secrets = appsecrets.AppSecrets(MY_SECRETS_CSV_FILE)
+print(secrets.get_google_api_client_id())
+gmaps = googlemaps.Client(
+        client_id= secrets.get_google_api_client_id(),
+        client_secret= secrets.get_google_api_secret())
 
 # Geocoding an address
 #geocode_result_from = gmaps.geocode('10153 King George Hwy, Surrey, BC')
@@ -36,7 +38,9 @@ distance_result = gmaps.distance_matrix(origins = qry_origins,
         mode = 'driving',
         departure_time=now)
 
-pprint.pprint (distance_result)
+pprint (distance_result)
+
+pprint(distance_result['rows'][0][])
 
 # print (geocode_result)
 
