@@ -1,9 +1,9 @@
-
 import os
+import sys
 import pandas 
 import googlemaps
 from datetime import datetime
-from .appsecrets import AppSecrets
+from appsecrets import AppSecrets
 from pprint import pprint
 from translink import rttiapi
 
@@ -21,10 +21,32 @@ class DistanceMatrixResponse(object):
 
     def get_origin_location(self):
         return self.origin_addresses[0]
+        
 
 
 def main():
 
+    '''
+        inital entry point of nextbus. A stop nuber and line number must be
+        specified
+    '''
+
+    if len(sys.argv) != 3:
+        print('sys.argv = ' + str(len(sys.argv)))
+        print('A stop nuber and line(route) number must be specified')
+        return
+    
+    _stopNo = sys.argv[1]
+    _routeNo = sys.argv[2]
+
+    # start getting stop and bus schedule/estimate 
+    start(_stopNo, _routeNo)
+
+def start(stopNo, routeNo):
+    ''' 
+
+    '''
+    print('stop_no' +str(stopNo), 'routne_no'+str(routeNo))
     #MY_SECRETS_CSV_FILE = '..\jtang-python-secrets.csv'
     secrets = AppSecrets(os.path.dirname(os.path.abspath(__file__)) + r'\..\..\jtang-python-secrets.csv')
 
@@ -35,7 +57,7 @@ def main():
     qry_origins = []
     qry_dests = []
 
-    stop = api.stop('53095')
+    stop = api.stop(stopNo)
     #pprint(stop)
 
     print ('Stop')
@@ -47,7 +69,7 @@ def main():
 
     qry_dests.append({'lat': stop.Latitude, 'lng': stop.Longitude})
 
-    buses = api.buses('53095')
+    buses = api.buses(stopNo, routeNo)
     #print (buses)
     for bus in buses:
 
@@ -78,7 +100,7 @@ def main():
         print ('\tAway = ' + obj.get_distance())
 
         #pprint (distance_result)
-        print ('\tBus Location = ' + obj.get_origin_location())
+        print ('\tBus.Location = ' + obj.get_origin_location())
         qry_origins.clear()
 
     
