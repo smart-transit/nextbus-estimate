@@ -11,13 +11,18 @@ import json
 class DistanceMatrixResponse(object):
     def __init__(self, data):
 	    self.__dict__ = json.loads(data)
-        
 
     def get_duration_in_traffic(self):
         return self.__dict__['rows'][0]['elements'][0]['duration_in_traffic']['text']
 
+    def get_duration_in_traffic_in_seconds(self):
+        return int(self.__dict__['rows'][0]['elements'][0]['duration_in_traffic']['value'])
+
     def get_distance(self):
         return self.__dict__['rows'][0]['elements'][0]['distance']['text']
+    
+    def get_distance_in_meter(self):
+        return int(self.__dict__['rows'][0]['elements'][0]['distance']['value'])
 
     def get_origin_location(self):
         return self.origin_addresses[0]
@@ -46,7 +51,7 @@ def start(stopNo, routeNo):
     ''' 
 
     '''
-    print('stop_no' +str(stopNo), 'routne_no'+str(routeNo))
+    print('stop_no: ' +str(stopNo), 'routne_no: '+str(routeNo))
     #MY_SECRETS_CSV_FILE = '..\jtang-python-secrets.csv'
     secrets = AppSecrets(os.path.dirname(os.path.abspath(__file__)) + r'\..\..\jtang-python-secrets.csv')
 
@@ -70,9 +75,10 @@ def start(stopNo, routeNo):
     qry_dests.append({'lat': stop.Latitude, 'lng': stop.Longitude})
 
     buses = api.buses(stopNo, routeNo)
+
     #print (buses)
     for bus in buses:
-
+        
         qry_origins.append({'lat': bus.Latitude, 'lng': bus.Longitude})
         print ('Bus')
         print ('\tVehicle# = ' + bus.VehicleNo)
@@ -92,12 +98,13 @@ def start(stopNo, routeNo):
                 mode = 'driving',
                 departure_time=now)
 
-        
+        #pprint(distance_result)
 
         obj = DistanceMatrixResponse(json.dumps(distance_result))
 
-        print ('\tArrives at =' + obj.get_duration_in_traffic())
         print ('\tAway = ' + obj.get_distance())
+        print ('\tArrives at = ' + obj.get_duration_in_traffic())
+        print ('\tAt speed = {0} km/h'.format(round((obj.get_distance_in_meter() / 1000 / obj.get_duration_in_traffic_in_seconds() * 3600),1)))
 
         #pprint (distance_result)
         print ('\tBus.Location = ' + obj.get_origin_location())
